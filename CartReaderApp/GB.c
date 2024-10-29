@@ -448,7 +448,7 @@ void readROM_GB() {
   // create a new folder for the rom file
   foldern = load_dword();
   f_chdir("/");
-  sprintf(folder, "GB/ROM/%s/%d", romName, foldern);
+  sprintf(folder, "ROMs");
 
   FRESULT rst;
   FIL tfile;
@@ -607,7 +607,7 @@ void readSRAM_GB() {
 
     // create a new folder for the save file
     foldern = load_dword();
-    sprintf(folder, "GB/SAVE/%s/%d", romName, foldern);
+    sprintf(folder, "saves";
     my_mkdir(folder);
     f_chdir(folder);
 

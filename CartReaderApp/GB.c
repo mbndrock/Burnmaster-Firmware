@@ -448,7 +448,7 @@ void readROM_GB() {
   // create a new folder for the rom file
   foldern = load_dword();
   f_chdir("/");
-  sprintf(folder, "/GB/ROM/");
+  sprintf(folder, "GB/ROM/%s/%d", romName, foldern);
 
   FRESULT rst;
   FIL tfile;
@@ -573,7 +573,7 @@ boolean compare_checksum_GB() {
 
   // last used rom folder
   foldern = load_dword();
-  sprintf(folder, "GB/ROM/");
+  sprintf(folder, "GB/ROM/%s/%d", romName, foldern - 1);
 
   char calcsumStr[5];
   sprintf(calcsumStr, "%04X", calc_checksum_GB(fileName, folder));
@@ -607,7 +607,7 @@ void readSRAM_GB() {
 
     // create a new folder for the save file
     foldern = load_dword();
-    sprintf(folder, "GB/SAVE/");
+    sprintf(folder, "GB/SAVE/%s/%d", romName, foldern);
     my_mkdir(folder);
     f_chdir(folder);
 
@@ -2041,7 +2041,7 @@ uint8_t gbFlashMenu()
         }
 
 
-        sprintf(filePath, "/GB/SAVE/");
+        sprintf(filePath, "/GB/SAVE/%s/", fileName);
         bool saveFound = false;
         FILINFO tfinfo;
         if (f_stat(filePath,&tfinfo) == FR_OK) 
@@ -2049,7 +2049,7 @@ uint8_t gbFlashMenu()
           foldern = load_dword();
           for (int i = foldern; i >= 0; i--) 
           {
-            sprintf(filePath, "/GB/SAVE/%s.SAV", fileName);
+            sprintf(filePath, "/GB/SAVE/%s/%d/%s.SAV", fileName, i, fileName);
             if (f_stat(filePath,&tfinfo) == FR_OK) 
             {
               //

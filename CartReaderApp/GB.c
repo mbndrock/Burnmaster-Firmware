@@ -2008,7 +2008,7 @@ uint8_t gbFlashMenu()
         }
 
 
-        sprintf(filePath, "/GB/SAVE/%s/", fileName);
+        sprintf(filePath, "/saves/%s/", fileName);
         bool saveFound = false;
         FILINFO tfinfo;
         if (f_stat(filePath,&tfinfo) == FR_OK) 
@@ -2016,7 +2016,7 @@ uint8_t gbFlashMenu()
           foldern = load_dword();
           for (int i = foldern; i >= 0; i--) 
           {
-            sprintf(filePath, "/GB/SAVE/%s/%d/%s.SAV", fileName, i, fileName);
+            sprintf(filePath, "/saves/%s.SAV", fileName);
             if (f_stat(filePath,&tfinfo) == FR_OK) 
             {
               //

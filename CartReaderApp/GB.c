@@ -448,7 +448,7 @@ void readROM_GB() {
   // create a new folder for the rom file
 //  foldern = load_dword();
   f_chdir("/");
-  sprintf(folder, "GB/ROM/%s", romName,);
+  sprintf(folder, "GB/ROM/%s", romName);
 
   FRESULT rst;
   FIL tfile;
@@ -573,7 +573,7 @@ boolean compare_checksum_GB() {
 
   // last used rom folder
 //  foldern = load_dword();
-  sprintf(folder, "GB/ROM/%s", romName,);
+  sprintf(folder, "GB/ROM/%s", romName);
 
   char calcsumStr[5];
   sprintf(calcsumStr, "%04X", calc_checksum_GB(fileName, folder));
@@ -2054,7 +2054,7 @@ uint8_t gbFlashMenu()
             {
               //
               char tmsg[64] = {0};
-              sprintf(tmsg,"Save number %d found.",i);
+              sprintf(tmsg,"Save number %d found.");
               OledShowString(0,1,tmsg,8);
               saveFound = true;
 

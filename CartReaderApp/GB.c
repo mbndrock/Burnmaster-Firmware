@@ -1986,7 +1986,7 @@ uint8_t gbFlashMenu()
     case 1:
       // Flash CFI
       // Launch filebrowser
-      fileBrowser("/","Select file:");
+      fileBrowser("/GB/ROM/","Select file:");
       OledClear();
       identifyCFI_GB();
       if (!writeCFI_GB()) {
@@ -1997,7 +1997,7 @@ uint8_t gbFlashMenu()
 
     case 2:
       // Flash CFI and Save
-      fileBrowser("/","Select file:");
+      fileBrowser("/GB/SAVE/","Select file:");
       OledClear();
       identifyCFI_GB();
       if (!writeCFI_GB()) {
@@ -2025,45 +2025,37 @@ uint8_t gbFlashMenu()
         }
 
 
-        sprintf(filePath, "/GB/SAVE/%s/", fileName);
-        bool saveFound = false;
-        FILINFO tfinfo;
-        if (f_stat(filePath,&tfinfo) == FR_OK) 
-        {
-//          foldern = load_dword();
-//          for (int i = foldern; i >= 0; i--) 
-          {
-            sprintf(filePath, "/GB/SAVE/%s.SAV", fileName);
-            if (f_stat(filePath,&tfinfo) == FR_OK) 
-            {
-              //
-              char tmsg[64] = {0};
-              sprintf(tmsg,"Save number %d found.");
-              OledShowString(0,1,tmsg,8);
-              saveFound = true;
+sprintf(filePath, "/GB/SAVE/%s.sav", fileName); // Save path is now direct without nested folders
 
-              writeSRAM_GB();
+FILINFO tfinfo;
+bool saveFound = false;
 
-              unsigned long wrErrors = verifySRAM_GB();
-              if (wrErrors == 0) 
-              {
-                OledShowString(0,2,"Verified OK",8);
-              }
-              else 
-              {
-                sprintf(tmsg,"Error: %d bytes.",wrErrors);
-                OledShowString(0,2,tmsg,8);
-                print_Error("Did not verify...", false);
-              }
-              break;
-            }
-          }
-        }
-        
-        if (!saveFound) 
-        {
-          OledShowString(0,1,"Error: No save found.",8);
-        }
+if (f_stat(filePath, &tfinfo) == FR_OK)  // Check if the save file exists
+{
+    saveFound = true;
+    char tmsg[64] = {0};
+    sprintf(tmsg, "Save found for %s", fileName); // Confirmation message
+    OledShowString(0, 1, tmsg, 8);
+
+    writeSRAM_GB();  // Write save data to SRAM
+
+    unsigned long wrErrors = verifySRAM_GB();  // Verify the write process
+    if (wrErrors == 0) 
+    {
+        OledShowString(0, 2, "Verified OK", 8);  // Verification success
+    }
+    else 
+    {
+        sprintf(tmsg, "Error: %lu bytes.", wrErrors);
+        OledShowString(0, 2, tmsg, 8);
+        print_Error("Did not verify...", false);
+    }
+}
+else 
+{
+    OledShowString(0, 1, "Error: No save found.", 8);
+}
+
       }
       else 
       {

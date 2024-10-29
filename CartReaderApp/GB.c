@@ -440,69 +440,84 @@ void setup_GB() {
   ROM functions
 *****************************************/
 // Read ROM
-
-// Save the ROM in the root 'roms' folder
 void readROM_GB() {
-  // Get name, add extension, and prepare directory path for ROM
+  // Get name, add extension and convert to char array for sd lib
   strcpy(fileName, romName);
   strcat(fileName, ".GB");
 
-  // Set path for ROM
-  strcpy(folder, "/roms");
+  // create a new folder for the rom file
+  foldern = load_dword();
+  f_chdir("/");
+  sprintf(folder, "GB/ROM);
 
   FRESULT rst;
   FIL tfile;
 
-  // Make and change directory to 'roms' on root
   rst = my_mkdir(folder);
   rst = f_chdir(folder);
 
   OledClear();
-  OledShowString(0,0,"Saving to /roms/",8);
+  OledShowString(0,0,"Saving to ",8);
   OledShowString(4,1,folder,8);
+  //printf("/..."));
 
-  // Write folder number to EEPROM if required (else keep as is)
+  // write new folder number back to eeprom
   foldern = foldern + 1;
+  save_dword(foldern);
 
-  // Open file for writing in 'roms' directory
+  //open file on sd card
   rst = f_open(&tfile,fileName, FA_CREATE_ALWAYS|FA_WRITE);
   if (rst != FR_OK) {
     print_Error("Can't create file", 1);
   }
 
   word romAddress = 0;
+
+  //Initialize progress bar
   uint32_t processedProgressBar = 0;
   uint32_t totalProgressBar = (uint32_t)(romBanks) * 16384;
-  draw_progressbar(0, totalProgressBar, 3);
+  draw_progressbar(0, totalProgressBar,3);
 
   for (word currBank = 1; currBank < romBanks; currBank++) {
+    // Switch data pins to output
     dataOut_GB();
+
     LED_GREEN_BLINK;
 
+    // Set ROM bank for MBC2/3/4/5
     if (romType >= 5) {
       writeByte_GB(0x2100, currBank);
-    } else {
+    }
+    // Set ROM bank for MBC1
+    else {
       writeByte_GB(0x6000, 0);
       writeByte_GB(0x4000, currBank >> 5);
       writeByte_GB(0x2000, currBank & 0x1F);
     }
 
+    // Switch data pins to intput
     dataIn_GB();
+
+    // Second bank starts at 0x4000
     if (currBank > 1) {
       romAddress = 0x4000;
     }
 
+    
+    // Read banks and save to SD
     while (romAddress <= 0x7FFF) {
       for (int i = 0; i < 512; i++) {
         sdBuffer[i] = readByte_GB(romAddress + i);
       }
       UINT dwt = 0;
-      rst = f_write(&tfile, sdBuffer, 512, &dwt);
+      rst = f_write(&tfile,sdBuffer, 512,&dwt);
       romAddress += 512;
       processedProgressBar += 512;
-      draw_progressbar(processedProgressBar, totalProgressBar, 3);
+      draw_progressbar(processedProgressBar, totalProgressBar,3);
     }
   }
+
+  // Close the file:
   f_close(&tfile);
 }
 
@@ -558,7 +573,7 @@ boolean compare_checksum_GB() {
 
   // last used rom folder
   foldern = load_dword();
-  sprintf(folder, "GB/ROM/%s/%d", romName, foldern - 1);
+  sprintf(folder, "GB/ROM/;
 
   char calcsumStr[5];
   sprintf(calcsumStr, "%04X", calc_checksum_GB(fileName, folder));
@@ -582,40 +597,50 @@ boolean compare_checksum_GB() {
   SRAM functions
 *****************************************/
 // Read RAM
-
-// Save the SRAM in the root 'saves' folder
 void readSRAM_GB() {
+  // Does cartridge have RAM
   if (lastByte > 0) {
+
+    // Get name, add extension and convert to char array for sd lib
     strcpy(fileName, romName);
     strcat(fileName, ".sav");
 
-    // Set path for saves
-    strcpy(folder, "/saves");
+    // create a new folder for the save file
+    foldern = load_dword();
+    sprintf(folder, "GB/SAVE/);
     my_mkdir(folder);
     f_chdir(folder);
 
+    // write new folder number back to eeprom
     foldern = foldern + 1;
     save_dword(foldern);
 
+    //open file on sd card
     FIL tfile;
     if (f_open(&tfile, fileName, FA_CREATE_ALWAYS|FA_WRITE) != FR_OK) {
       print_Error("SD Error", true);
     }
 
     dataIn_GB();
-    readByte_GB(0x0134);
-    dataOut_GB();
 
+    // MBC2 Fix
+    readByte_GB(0x0134);
+
+    dataOut_GB();
     if (romType <= 4) {
       writeByte_GB(0x6000, 1);
     }
 
+    // Initialise MBC
     writeByte_GB(0x0000, 0x0A);
+
+    // Switch SRAM banks
     for (byte currBank = 0; currBank < sramBanks; currBank++) {
       dataOut_GB();
       writeByte_GB(0x4000, currBank);
-      dataIn_GB();
 
+      // Read SRAM
+      dataIn_GB();
       for (word sramAddress = 0xA000; sramAddress <= lastByte; sramAddress += 64) {
         for (byte i = 0; i < 64; i++) {
           sdBuffer[i] = readByteSRAM_GB(sramAddress + i);
@@ -624,13 +649,21 @@ void readSRAM_GB() {
         f_write(&tfile, sdBuffer, 64, &wrt);
       }
     }
+
+    // Disable SRAM
     dataOut_GB();
     writeByte_GB(0x0000, 0x00);
     dataIn_GB();
 
+    // Close the file:
     f_close(&tfile);
-    OledShowString(0,0,"Saved to /saves",8);
-  } else {
+
+    // Signal end of process
+    OledShowString(0,0,"Saved to ",8);
+    OledShowString(4,1,folder,8);
+    //printf("/"));
+  }
+  else {
     print_Error("Cart has no SRAM", false);
   }
 }
@@ -2008,7 +2041,7 @@ uint8_t gbFlashMenu()
         }
 
 
-        sprintf(filePath, "/saves/%s/", fileName);
+        sprintf(filePath, "/GB/SAVE/");
         bool saveFound = false;
         FILINFO tfinfo;
         if (f_stat(filePath,&tfinfo) == FR_OK) 
@@ -2016,7 +2049,7 @@ uint8_t gbFlashMenu()
           foldern = load_dword();
           for (int i = foldern; i >= 0; i--) 
           {
-            sprintf(filePath, "/saves/%s.SAV", fileName);
+            sprintf(filePath, "/GB/SAVE/%s.SAV", fileName);
             if (f_stat(filePath,&tfinfo) == FR_OK) 
             {
               //

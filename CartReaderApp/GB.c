@@ -461,10 +461,6 @@ void readROM_GB() {
   OledShowString(4,1,folder,8);
   //printf("/..."));
 
-  // write new folder number back to eeprom
-  foldern = foldern + 1;
-  save_dword(foldern);
-
   //open file on sd card
   rst = f_open(&tfile,fileName, FA_CREATE_ALWAYS|FA_WRITE);
   if (rst != FR_OK) {

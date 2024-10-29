@@ -573,7 +573,7 @@ boolean compare_checksum_GB() {
 
   // last used rom folder
   foldern = load_dword();
-  sprintf(folder, "roms/%s/%d", romName, foldern - 1);
+  sprintfsprintf(folder, "roms");
 
   char calcsumStr[5];
   sprintf(calcsumStr, "%04X", calc_checksum_GB(fileName, folder));

@@ -607,10 +607,6 @@ void readSRAM_GB() {
     my_mkdir(folder);
     f_chdir(folder);
 
-    // write new folder number back to eeprom
-    foldern = foldern + 1;
-    save_dword(foldern);
-
     //open file on sd card
     FIL tfile;
     if (f_open(&tfile, fileName, FA_CREATE_ALWAYS|FA_WRITE) != FR_OK) {

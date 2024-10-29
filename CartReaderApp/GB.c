@@ -446,24 +446,16 @@ void readROM_GB() {
   strcat(fileName, ".GB");
 
   // create a new folder for the rom file
-  foldern = load_dword();
   f_chdir("/");
-  sprintf(folder, "GB/ROM/%s/%d", romName, foldern);
+  sprintf(folder, "/GB/ROM/");
 
   FRESULT rst;
   FIL tfile;
-
-  rst = my_mkdir(folder);
-  rst = f_chdir(folder);
 
   OledClear();
   OledShowString(0,0,"Saving to ",8);
   OledShowString(4,1,folder,8);
   //printf("/..."));
-
-  // write new folder number back to eeprom
-  foldern = foldern + 1;
-  save_dword(foldern);
 
   //open file on sd card
   rst = f_open(&tfile,fileName, FA_CREATE_ALWAYS|FA_WRITE);
@@ -572,8 +564,7 @@ boolean compare_checksum_GB() {
   strcat(fileName, ".GB");
 
   // last used rom folder
-  foldern = load_dword();
-  sprintf(folder, "GB/ROM/%s/%d", romName, foldern - 1);
+  sprintf(folder, "/GB/ROM/");
 
   char calcsumStr[5];
   sprintf(calcsumStr, "%04X", calc_checksum_GB(fileName, folder));
@@ -606,14 +597,7 @@ void readSRAM_GB() {
     strcat(fileName, ".sav");
 
     // create a new folder for the save file
-    foldern = load_dword();
-    sprintf(folder, "GB/SAVE/%s/%d", romName, foldern);
-    my_mkdir(folder);
-    f_chdir(folder);
-
-    // write new folder number back to eeprom
-    foldern = foldern + 1;
-    save_dword(foldern);
+    sprintf(folder, "GB/SAVE/");
 
     //open file on sd card
     FIL tfile;
@@ -2046,10 +2030,10 @@ uint8_t gbFlashMenu()
         FILINFO tfinfo;
         if (f_stat(filePath,&tfinfo) == FR_OK) 
         {
-          foldern = load_dword();
-          for (int i = foldern; i >= 0; i--) 
+//          foldern = load_dword();
+//          for (int i = foldern; i >= 0; i--) 
           {
-            sprintf(filePath, "/GB/SAVE/%s/%d/%s.SAV", fileName, i, fileName);
+            sprintf(filePath, "/GB/SAVE/%s.SAV", fileName);
             if (f_stat(filePath,&tfinfo) == FR_OK) 
             {
               //

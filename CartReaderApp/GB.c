@@ -446,16 +446,24 @@ void readROM_GB() {
   strcat(fileName, ".GB");
 
   // create a new folder for the rom file
+//  foldern = load_dword();
   f_chdir("/");
-  sprintf(folder, "/GB/ROM/");
+  sprintf(folder, "GB/ROM/%s", romName,);
 
   FRESULT rst;
   FIL tfile;
+
+  rst = my_mkdir(folder);
+  rst = f_chdir(folder);
 
   OledClear();
   OledShowString(0,0,"Saving to ",8);
   OledShowString(4,1,folder,8);
   //printf("/..."));
+
+  // write new folder number back to eeprom
+  //foldern = foldern + 1;
+  //save_dword(foldern);
 
   //open file on sd card
   rst = f_open(&tfile,fileName, FA_CREATE_ALWAYS|FA_WRITE);
@@ -564,7 +572,8 @@ boolean compare_checksum_GB() {
   strcat(fileName, ".GB");
 
   // last used rom folder
-  sprintf(folder, "/GB/ROM/");
+//  foldern = load_dword();
+  sprintf(folder, "GB/ROM/%s", romName,);
 
   char calcsumStr[5];
   sprintf(calcsumStr, "%04X", calc_checksum_GB(fileName, folder));
@@ -597,7 +606,14 @@ void readSRAM_GB() {
     strcat(fileName, ".sav");
 
     // create a new folder for the save file
-    sprintf(folder, "GB/SAVE/");
+//    foldern = load_dword();
+    sprintf(folder, "GB/SAVE/%s", romName);
+    my_mkdir(folder);
+    f_chdir(folder);
+
+    // write new folder number back to eeprom
+//    foldern = foldern + 1;
+//    save_dword(foldern);
 
     //open file on sd card
     FIL tfile;
@@ -1986,7 +2002,7 @@ uint8_t gbFlashMenu()
     case 1:
       // Flash CFI
       // Launch filebrowser
-      fileBrowser("/GB/ROM/","Select file:");
+      fileBrowser("/","Select file:");
       OledClear();
       identifyCFI_GB();
       if (!writeCFI_GB()) {
@@ -1997,7 +2013,7 @@ uint8_t gbFlashMenu()
 
     case 2:
       // Flash CFI and Save
-      fileBrowser("/GB/SAVE/","Select file:");
+      fileBrowser("/","Select file:");
       OledClear();
       identifyCFI_GB();
       if (!writeCFI_GB()) {
@@ -2025,37 +2041,45 @@ uint8_t gbFlashMenu()
         }
 
 
-sprintf(filePath, "/GB/SAVE/%s.sav", fileName); // Save path is now direct without nested folders
+        sprintf(filePath, "/GB/SAVE/%s/", fileName);
+        bool saveFound = false;
+        FILINFO tfinfo;
+        if (f_stat(filePath,&tfinfo) == FR_OK) 
+        {
+//          foldern = load_dword();
+//          for (int i = foldern; i >= 0; i--) 
+          {
+            sprintf(filePath, "/GB/SAVE/%s/%s.SAV", fileName, fileName);
+            if (f_stat(filePath,&tfinfo) == FR_OK) 
+            {
+              //
+              char tmsg[64] = {0};
+              sprintf(tmsg,"Save number %d found.",i);
+              OledShowString(0,1,tmsg,8);
+              saveFound = true;
 
-FILINFO tfinfo;
-bool saveFound = false;
+              writeSRAM_GB();
 
-if (f_stat(filePath, &tfinfo) == FR_OK)  // Check if the save file exists
-{
-    saveFound = true;
-    char tmsg[64] = {0};
-    sprintf(tmsg, "Save found for %s", fileName); // Confirmation message
-    OledShowString(0, 1, tmsg, 8);
-
-    writeSRAM_GB();  // Write save data to SRAM
-
-    unsigned long wrErrors = verifySRAM_GB();  // Verify the write process
-    if (wrErrors == 0) 
-    {
-        OledShowString(0, 2, "Verified OK", 8);  // Verification success
-    }
-    else 
-    {
-        sprintf(tmsg, "Error: %lu bytes.", wrErrors);
-        OledShowString(0, 2, tmsg, 8);
-        print_Error("Did not verify...", false);
-    }
-}
-else 
-{
-    OledShowString(0, 1, "Error: No save found.", 8);
-}
-
+              unsigned long wrErrors = verifySRAM_GB();
+              if (wrErrors == 0) 
+              {
+                OledShowString(0,2,"Verified OK",8);
+              }
+              else 
+              {
+                sprintf(tmsg,"Error: %d bytes.",wrErrors);
+                OledShowString(0,2,tmsg,8);
+                print_Error("Did not verify...", false);
+              }
+              break;
+            }
+          }
+        }
+        
+        if (!saveFound) 
+        {
+          OledShowString(0,1,"Error: No save found.",8);
+        }
       }
       else 
       {

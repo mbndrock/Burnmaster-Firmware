@@ -2038,7 +2038,7 @@ uint8_t gbFlashMenu()
             {
               //
               char tmsg[64] = {0};
-              sprintf(tmsg,"Save number %d found.",i);
+              sprintf(tmsg,"Save number %d found.");
               OledShowString(0,1,tmsg,8);
               saveFound = true;
 

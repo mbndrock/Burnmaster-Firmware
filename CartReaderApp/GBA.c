@@ -21,6 +21,8 @@ unsigned long cartSize;
 char cartID[5];
 byte romVersion = 0;
 
+int manufacturerid;
+
 
 
 
